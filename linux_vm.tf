@@ -13,7 +13,7 @@ resource "azurerm_linux_virtual_machine" "this" {
   secure_boot_enabled                                    = var.secure_boot_enabled
   custom_data                                            = var.custom_cloud_init != null ? base64encode(var.custom_cloud_init) : (var.enable_cloud_init ? base64encode(local.default_cloud_init) : null)
   zone                                                   = var.zone
-  tags                                                   = var.vm_tags
+  tags                                                   = var.tags
   boot_diagnostics {
     storage_account_uri = null
   }
