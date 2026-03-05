@@ -44,5 +44,12 @@ locals {
       - traceroute
       - net-tools
       - dnsutils
+      - ca-certificates
+      - curl
+      - apt-transport-https
+      - lsb-release
+      - gnupg
+    runcmd:
+      - curl -sL https://aka.ms/InstallAzureCLIDeb | bash
   EOT
 }
