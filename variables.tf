@@ -162,7 +162,7 @@ variable "enable_public_ip" {
   default     = false
 }
 
-variable "create_nsg_on_subnet" {
+variable "create_nsg" {
   description = "Whether to create an NSG on the subnet that allows SSH (port 22) from your current public IP (fetched via ipify)"
   type        = bool
   default     = false

@@ -89,7 +89,7 @@ resource "azurerm_resource_group" "this" {
 
 # Fetch current public IP for NSG rule
 data "http" "my_ip" {
-  count = var.create_nsg_on_subnet ? 1 : 0
+  count = var.create_nsg ? 1 : 0
   url   = "https://api.ipify.org"
 }
 
@@ -130,9 +130,9 @@ resource "azurerm_network_interface" "this" {
   tags = var.tags
 }
 
-# Create NSG on subnet if enabled
+# Create NSG on VM NIC if enabled
 resource "azurerm_network_security_group" "this" {
-  count               = var.create_nsg_on_subnet ? 1 : 0
+  count               = var.create_nsg ? 1 : 0
   name                = "${local.vm_name}-nsg"
   location            = local.resource_group_location
   resource_group_name = local.resource_group_name
@@ -155,9 +155,9 @@ resource "azurerm_network_security_group" "this" {
   }
 }
 
-resource "azurerm_subnet_network_security_group_association" "this" {
-  count                     = var.create_nsg_on_subnet ? 1 : 0
-  subnet_id                 = data.azurerm_subnet.this.id
+resource "azurerm_network_interface_security_group_association" "this" {
+  count                     = var.create_nsg ? 1 : 0
+  network_interface_id      = azurerm_network_interface.this.id
   network_security_group_id = azurerm_network_security_group.this[0].id
 }
 
