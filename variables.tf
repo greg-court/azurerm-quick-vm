@@ -156,6 +156,18 @@ variable "private_ip_address" {
   default     = null
 }
 
+variable "enable_public_ip" {
+  description = "Whether to create and assign a public IP address to the VM"
+  type        = bool
+  default     = false
+}
+
+variable "create_nsg_on_subnet" {
+  description = "Whether to create an NSG on the subnet that allows SSH (port 22) from your current public IP (fetched via ipify)"
+  type        = bool
+  default     = false
+}
+
 # Linux specific configuration
 variable "enable_cloud_init" {
   description = "Enable installation of packages on first boot (Linux only)"

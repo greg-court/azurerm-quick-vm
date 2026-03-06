@@ -18,6 +18,11 @@ output "private_ip_address" {
   value       = lower(var.os_type) == "linux" ? azurerm_linux_virtual_machine.this[0].private_ip_address : azurerm_windows_virtual_machine.this[0].private_ip_address
 }
 
+output "public_ip_address" {
+  description = "The public IP address of the VM (if enabled)"
+  value       = var.enable_public_ip ? azurerm_public_ip.this[0].ip_address : null
+}
+
 output "admin_username" {
   description = "The administrator username for the VM"
   value       = var.admin_username

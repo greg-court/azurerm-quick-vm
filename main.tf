@@ -87,6 +87,28 @@ resource "azurerm_resource_group" "this" {
   tags     = var.rg_tags
 }
 
+# Fetch current public IP for NSG rule
+data "http" "my_ip" {
+  count = var.create_nsg_on_subnet ? 1 : 0
+  url   = "https://api.ipify.org"
+}
+
+# Create public IP if enabled
+resource "azurerm_public_ip" "this" {
+  count               = var.enable_public_ip ? 1 : 0
+  name                = "${local.vm_name}-pip"
+  location            = local.resource_group_location
+  resource_group_name = local.resource_group_name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+  zones               = var.zone != null ? [var.zone] : []
+  tags                = var.tags
+
+  lifecycle {
+    ignore_changes = [tags]
+  }
+}
+
 # Create network interface
 resource "azurerm_network_interface" "this" {
   name                = "${local.vm_name}-nic"
@@ -98,6 +120,7 @@ resource "azurerm_network_interface" "this" {
     subnet_id                     = var.subnet_id
     private_ip_address_allocation = var.private_ip_address_allocation
     private_ip_address            = var.private_ip_address_allocation == "Static" ? var.private_ip_address : null
+    public_ip_address_id          = var.enable_public_ip ? azurerm_public_ip.this[0].id : null
   }
 
   lifecycle {
@@ -105,6 +128,37 @@ resource "azurerm_network_interface" "this" {
   }
 
   tags = var.tags
+}
+
+# Create NSG on subnet if enabled
+resource "azurerm_network_security_group" "this" {
+  count               = var.create_nsg_on_subnet ? 1 : 0
+  name                = "${local.vm_name}-nsg"
+  location            = local.resource_group_location
+  resource_group_name = local.resource_group_name
+  tags                = var.tags
+
+  security_rule {
+    name                       = "Allow-SSH-Inbound"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "22"
+    source_address_prefix      = "${chomp(data.http.my_ip[0].response_body)}/32"
+    destination_address_prefix = "*"
+  }
+
+  lifecycle {
+    ignore_changes = [tags]
+  }
+}
+
+resource "azurerm_subnet_network_security_group_association" "this" {
+  count                     = var.create_nsg_on_subnet ? 1 : 0
+  subnet_id                 = data.azurerm_subnet.this.id
+  network_security_group_id = azurerm_network_security_group.this[0].id
 }
 
 locals {
